@@ -187,6 +187,18 @@ body {
   color: var(--text-sub);
 }
 
+.df-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* This is the content size you like on Overview */
+.df-main-inner {
+  max-width: 1150px; /* width of the dashboard */
+  margin: 0 auto; /* center it */
+  padding: 24px 32px 32px; /* space from top + sides */
+}
+
 /* Buttons */
 
 .df-btn {
@@ -546,4 +558,402 @@ body {
   .df-kpi-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* User badge in topbar */
+.df-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.4rem;
+}
+
+.df-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 20%, #22c55e, #0ea5e9 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.df-user-name {
+  font-size: 0.8rem;
+}
+
+/* Weather detail layout */
+.df-weather-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.df-weather-block {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  font-size: 0.85rem;
+}
+
+.df-weather-block h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+.df-weather-main {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+}
+
+.df-weather-desc {
+  margin: 0 0 0.4rem;
+  color: var(--text-sub);
+}
+
+@media (max-width: 900px) {
+  .df-weather-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* === TOPBAR LAYOUT & COLORS === */
+.df-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+  background: radial-gradient(
+    circle at 0 0,
+    #111827 0,
+    #020617 45%,
+    #020617 100%
+  );
+}
+
+.df-topbar-left {
+  min-width: 160px;
+  text-align: left;
+}
+
+.df-app-tag {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+/* Center block is shared for ALL pages */
+.df-topbar-center {
+  flex: 1;
+  text-align: center;
+}
+
+.df-page-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #f9fafb; /* bright white */
+}
+
+.df-page-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.85rem;
+  color: #d1d5db; /* lighter than old ash */
+}
+
+/* Right side */
+.df-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.df-clock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+/* Buttons */
+.df-btn {
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+}
+
+.df-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  color: #f9fafb;
+  box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.35),
+    0 10px 25px rgba(15, 23, 42, 0.85);
+}
+
+.df-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.9);
+}
+
+.df-btn-ghost {
+  background: rgba(15, 23, 42, 0.8);
+  color: #e5e7eb;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.df-btn-ghost:hover {
+  background: rgba(31, 41, 55, 0.95);
+}
+
+.df-btn-outline {
+  background: transparent;
+  border: 1px solid rgba(156, 163, 175, 0.9);
+  color: #e5e7eb;
+}
+
+.df-btn-outline:hover {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* User pill */
+.df-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.4rem;
+}
+
+.df-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 20%, #22c55e, #0ea5e9 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.df-user-name {
+  font-size: 0.8rem;
+  color: #f3f4f6;
+}
+
+/* Global text color tweaks */
+.df-panel-title,
+.df-card-title {
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.df-subtext {
+  color: #d1d5db; /* a bit whiter than before */
+}
+
+.df-table th {
+  color: #e5e7eb;
+}
+
+.df-table td {
+  color: #e5e7eb;
+}
+
+/* Links: remove bright blue */
+.df-table a,
+.df-list a {
+  color: #bfdbfe;
+  text-decoration: none;
+}
+
+.df-table a:hover,
+.df-list a:hover {
+  color: #e5e7eb;
+  text-decoration: underline;
+}
+/* === Weather page layout === */
+.df-weather-page {
+  margin-top: 1rem;
+}
+
+.df-weather-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.df-weather-grid-main {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.df-weather-block {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  font-size: 0.86rem;
+}
+
+.df-weather-block h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: #f9fafb;
+}
+
+.df-weather-main {
+  margin: 0 0 0.1rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.df-weather-temp {
+  margin: 0 0 0.25rem;
+  color: #e5e7eb;
+}
+
+.df-weather-desc {
+  margin: 0 0 0.5rem;
+  color: #cbd5f5;
+  text-transform: capitalize;
+}
+
+.df-weather-meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.df-weather-meta-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.df-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.df-weather-status {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+}
+
+/* Search panel */
+.df-weather-search-form {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.df-input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  padding: 0.4rem 0.75rem;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  font-size: 0.85rem;
+}
+
+.df-input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.df-error-text {
+  color: #fca5a5;
+  font-size: 0.8rem;
+}
+
+/* Search result card */
+.df-weather-search-result {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed rgba(55, 65, 81, 0.8);
+}
+
+/* Popular cities grid */
+.df-weather-popular {
+  margin-top: 1.2rem;
+}
+
+.df-weather-grid {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.df-weather-card {
+  background: radial-gradient(circle at 0 0, #0f172a 0, #020617 60%);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  font-size: 0.8rem;
+}
+
+.df-weather-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.df-weather-city {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.df-weather-card-temp {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.df-weather-card-cond {
+  display: block;
+  color: #cbd5f5;
+  text-transform: capitalize;
+}
+
+.df-weather-card-feels {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .df-weather-grid-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .df-weather-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .df-weather-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Ensures same space beneath the top bar on ALL sub pages */
+.df-page-root {
+  margin-top: 1.4rem;
 }

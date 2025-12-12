@@ -18,6 +18,50 @@ function Sidebar({ activeSection, setActiveSection }) {
         >
           Overview
         </button>
+
+        <button
+          className={`df-nav-item ${
+            activeSection === "github" ? "active" : ""
+          }`}
+          onClick={() => setActiveSection("github")}
+        >
+          GitHub Trending
+        </button>
+
+        <button
+          className={`df-nav-item ${
+            activeSection === "crypto" ? "active" : ""
+          }`}
+          onClick={() => setActiveSection("crypto")}
+        >
+          Crypto Markets
+        </button>
+
+        <button
+          className={`df-nav-item ${activeSection === "news" ? "active" : ""}`}
+          onClick={() => setActiveSection("news")}
+        >
+          Tech News
+        </button>
+
+        <button
+          className={`df-nav-item ${
+            activeSection === "community" ? "active" : ""
+          }`}
+          onClick={() => setActiveSection("community")}
+        >
+          Community (StackOverflow)
+        </button>
+
+        <button
+          className={`df-nav-item ${
+            activeSection === "weather" ? "active" : ""
+          }`}
+          onClick={() => setActiveSection("weather")}
+        >
+          Weather & Stability
+        </button>
+
         <button
           className={`df-nav-item ${
             activeSection === "history" ? "active" : ""
@@ -26,19 +70,11 @@ function Sidebar({ activeSection, setActiveSection }) {
         >
           History
         </button>
-        <button
-          className={`df-nav-item ${
-            activeSection === "settings" ? "active" : ""
-          }`}
-          onClick={() => setActiveSection("settings")}
-        >
-          Settings
-        </button>
       </nav>
 
       <div className="df-sidebar-footer">
         <span className="df-pill df-pill-online">LIVE • CLIENT</span>
-        <span className="df-build">v0.1-alpha</span>
+        <span className="df-build">v0.3-multi-pages</span>
       </div>
     </aside>
   );

@@ -13,6 +13,7 @@ export function requireAuth(req, res, next) {
     req.user = { id: payload.userId, name: payload.name };
     next();
   } catch (err) {
+    console.error("JWT error:", err.message);
     return res.status(401).json({ error: "Invalid token" });
   }
 }

@@ -5,13 +5,14 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
+// Step 1: redirect to Google
 router.get("/google", (req, res) => {
   const redirectUri = encodeURIComponent(process.env.GOOGLE_REDIRECT_URI);
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const scope = encodeURIComponent("openid email profile");
 
   const authUrl =
-    `https://accounts.google.com/o/oauth2/v2/auth` +
+    "https://accounts.google.com/o/oauth2/v2/auth" +
     `?client_id=${clientId}` +
     `&redirect_uri=${redirectUri}` +
     `&response_type=code` +
@@ -20,12 +21,13 @@ router.get("/google", (req, res) => {
   res.redirect(authUrl);
 });
 
+// Step 2: Google redirects back here with ?code=
 router.get("/google/callback", async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send("No code");
+  if (!code) return res.status(400).send("Missing code");
 
   try {
-    // 1) Exchange code for tokens
+    // Exchange code for tokens
     const tokenRes = await axios.post(
       "https://oauth2.googleapis.com/token",
       {
@@ -35,14 +37,16 @@ router.get("/google/callback", async (req, res) => {
         redirect_uri: process.env.GOOGLE_REDIRECT_URI,
         grant_type: "authorization_code",
       },
-      { headers: { "Content-Type": "application/json" } }
+      {
+        headers: { "Content-Type": "application/json" },
+      }
     );
 
     const { id_token } = tokenRes.data;
 
-    // 2) Decode id_token (JWT)
+    // Decode id_token (Google's JWT)
     const payload = JSON.parse(
-      Buffer.from(id_token.split(".")[1], "base64").toString()
+      Buffer.from(id_token.split(".")[1], "base64").toString("utf8")
     );
 
     const googleId = payload.sub;
@@ -50,8 +54,12 @@ router.get("/google/callback", async (req, res) => {
     const name = payload.name;
     const picture = payload.picture;
 
-    // 3) Find or create user
-    let user = await User.findOne({ provider: "google", providerId: googleId });
+    // Find or create user
+    let user = await User.findOne({
+      provider: "google",
+      providerId: googleId,
+    });
+
     if (!user) {
       user = await User.create({
         provider: "google",
@@ -62,15 +70,15 @@ router.get("/google/callback", async (req, res) => {
       });
     }
 
-    // 4) Create our own JWT
+    // Our own JWT for the app
     const appToken = jwt.sign(
       { userId: user._id.toString(), name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "2h" }
     );
 
-    // 5) Redirect back to frontend with token
-    const frontendUrl = `${process.env.FRONTEND_ORIGIN}/auth/callback?token=${appToken}`;
+    // redirect back to frontend with ?token=
+    const frontendUrl = `${process.env.FRONTEND_ORIGIN}/?token=${appToken}`;
     res.redirect(frontendUrl);
   } catch (err) {
     console.error("Google OAuth error:", err.response?.data || err.message);

@@ -8,16 +8,34 @@ import GaugeCard from "./components/GaugeCard.jsx";
 import KpiCard from "./components/KpiCard.jsx";
 import Panel from "./components/Panel.jsx";
 import HistoryPanel from "./components/HistoryPanel.jsx";
+import GithubPage from "./components/GithubPage.jsx";
+import WeatherPage from "./components/WeatherPage.jsx";
+import CryptoPage from "./components/CryptoPage.jsx";
+import NewsPage from "./components/NewsPage.jsx";
+import CommunityPage from "./components/CommunityPage.jsx";
 
 const FRONTEND_API_KEY = import.meta.env.VITE_FRONTEND_API_KEY;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const NEWS_API_KEY = import.meta.env.VITE_NEWS_API_KEY;
 const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-const OPENWEATHER_CITY = import.meta.env.VITE_OPENWEATHER_CITY || "London";
-const OPENWEATHER_COUNTRY = import.meta.env.VITE_OPENWEATHER_COUNTRY || "GB";
+
+function decodeUserFromToken(token) {
+  if (!token) return null;
+  try {
+    const [, payload] = token.split(".");
+    const data = JSON.parse(atob(payload));
+    return { name: data.name || "User" };
+  } catch {
+    return null;
+  }
+}
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("devflow_token"));
+  const [user, setUser] = useState(() =>
+    decodeUserFromToken(localStorage.getItem("devflow_token"))
+  );
+
   const [snapshot, setSnapshot] = useState(null);
   const [history, setHistory] = useState([]);
   const [activeSection, setActiveSection] = useState("overview");
@@ -30,7 +48,7 @@ function App() {
     if (urlToken) {
       localStorage.setItem("devflow_token", urlToken);
       setToken(urlToken);
-      // Clean URL
+      setUser(decodeUserFromToken(urlToken));
       window.history.replaceState({}, document.title, "/");
     }
   }, []);
@@ -44,37 +62,87 @@ function App() {
   function logout() {
     localStorage.removeItem("devflow_token");
     setToken(null);
+    setUser(null);
     setSnapshot(null);
     setHistory([]);
   }
 
   // --- Public API fetchers ---
 
+  // 1) GitHub trending repos (top JS repos by stars)
+  async function fetchGithub() {
+    const res = await axios.get("https://api.github.com/search/repositories", {
+      params: {
+        q: "stars:>1000 language:javascript",
+        sort: "stars",
+        order: "desc",
+        per_page: 20,
+      },
+    });
+
+    const items = res.data.items || [];
+    const topRepos = items.slice(0, 20).map((repo) => ({
+      id: repo.id,
+      name: repo.full_name,
+      description: repo.description,
+      stars: repo.stargazers_count,
+      language: repo.language,
+      url: repo.html_url,
+      forks: repo.forks_count,
+      issues: repo.open_issues_count,
+    }));
+
+    return {
+      totalCount: res.data.total_count,
+      topRepos,
+      languageFocus: "JavaScript · stars desc",
+    };
+  }
+
+  // 2) Crypto – top 20 coins by market cap
   async function fetchCrypto() {
     const res = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price",
+      "https://api.coingecko.com/api/v3/coins/markets",
       {
         params: {
-          ids: "bitcoin,ethereum",
-          vs_currencies: "usd",
-          include_24hr_change: true,
+          vs_currency: "usd",
+          order: "market_cap_desc",
+          per_page: 20,
+          page: 1,
+          sparkline: false,
+          price_change_percentage: "24h",
         },
       }
     );
 
-    const btc = res.data.bitcoin;
-    const change = btc.usd_24h_change ?? 0;
+    const coins = res.data || [];
+    const btc = coins.find((c) => c.id === "bitcoin") || coins[0];
+
+    const change = btc?.price_change_percentage_24h ?? 0;
     let trend = "Sideways";
     if (change > 3) trend = "Bullish";
     else if (change < -3) trend = "Bearish";
 
+    const mappedCoins = coins.map((c) => ({
+      id: c.id,
+      name: c.name,
+      symbol: c.symbol.toUpperCase(),
+      price: c.current_price,
+      change24h: c.price_change_percentage_24h,
+      marketCap: c.market_cap,
+      volume: c.total_volume,
+      image: c.image,
+    }));
+
     return {
-      btcPrice: btc.usd,
+      btcPrice: btc?.current_price ?? null,
       btcChange24h: change,
       trend,
+      coins: mappedCoins,
     };
   }
 
+  // 3) News sentiment – with extended headlines
   async function fetchNews() {
     if (!NEWS_API_KEY) {
       return {
@@ -88,7 +156,7 @@ function App() {
       params: {
         q: "software development OR programming OR AI",
         sortBy: "publishedAt",
-        pageSize: 5,
+        pageSize: 20,
         language: "en",
         apiKey: NEWS_API_KEY,
       },
@@ -118,17 +186,22 @@ function App() {
     if (normalized > 0.03) label = "Positive";
     if (normalized < -0.03) label = "Negative";
 
+    const headlines = articles.map((a) => ({
+      title: a.title,
+      source: a.source?.name,
+      url: a.url,
+      author: a.author,
+      publishedAt: a.publishedAt,
+    }));
+
     return {
       sentimentScore: normalized,
       sentimentLabel: label,
-      topHeadlines: articles.map((a) => ({
-        title: a.title,
-        source: a.source?.name,
-        url: a.url,
-      })),
+      topHeadlines: headlines,
     };
   }
 
+  // 4) StackOverflow community
   async function fetchCommunity() {
     const res = await axios.get("https://api.stackexchange.com/2.3/questions", {
       params: {
@@ -145,50 +218,105 @@ function App() {
         ? 0
         : items.reduce((sum, q) => sum + (q.score || 0), 0) / questionCount;
 
+    const topQuestions = items.slice(0, 20).map((q) => ({
+      id: q.question_id,
+      title: q.title,
+      score: q.score,
+      owner: q.owner?.display_name,
+      tags: q.tags,
+      link: `https://stackoverflow.com/questions/${q.question_id}`,
+      creationDate: q.creation_date * 1000,
+    }));
+
     return {
       tagFilter: "javascript;reactjs",
       questionCount,
       avgScore,
+      topQuestions,
     };
   }
 
+  // 5) Weather – based on IP location
   async function fetchWeather() {
-    if (!OPENWEATHER_API_KEY) {
+    try {
+      const locRes = await axios.get("https://ipapi.co/json/");
+      const { city, country_name: country, latitude, longitude } = locRes.data;
+
+      if (!OPENWEATHER_API_KEY) {
+        return {
+          city,
+          country,
+          tempC: 25,
+          feelsLike: 25,
+          humidity: 50,
+          pressure: 1013,
+          status: "Unknown",
+          condition: "Unknown",
+          windSpeed: 0,
+          windDeg: 0,
+          visibility: 0,
+          sunrise: null,
+          sunset: null,
+        };
+      }
+
+      const weatherRes = await axios.get(
+        "https://api.openweathermap.org/data/2.5/weather",
+        {
+          params: {
+            lat: latitude,
+            lon: longitude,
+            appid: OPENWEATHER_API_KEY,
+            units: "metric",
+          },
+        }
+      );
+
+      const main = weatherRes.data.main;
+      const weatherMain = weatherRes.data.weather?.[0]?.main || "Clear";
+      const description =
+        weatherRes.data.weather?.[0]?.description || weatherMain;
+      const sys = weatherRes.data.sys || {};
+      const wind = weatherRes.data.wind || {};
+
+      const status =
+        weatherMain === "Thunderstorm" || weatherMain === "Extreme"
+          ? "Unstable"
+          : "Stable";
+
       return {
-        city: `${OPENWEATHER_CITY}`,
+        city,
+        country,
+        tempC: main.temp,
+        feelsLike: main.feels_like,
+        humidity: main.humidity,
+        pressure: main.pressure,
+        status,
+        condition: description,
+        windSpeed: wind.speed,
+        windDeg: wind.deg,
+        visibility: weatherRes.data.visibility,
+        sunrise: sys.sunrise ? sys.sunrise * 1000 : null,
+        sunset: sys.sunset ? sys.sunset * 1000 : null,
+      };
+    } catch (err) {
+      console.error("Weather fetch error:", err.message);
+      return {
+        city: "Unknown",
+        country: "",
         tempC: 25,
+        feelsLike: 25,
         humidity: 50,
+        pressure: 1013,
         status: "Unknown",
         condition: "Unknown",
+        windSpeed: 0,
+        windDeg: 0,
+        visibility: 0,
+        sunrise: null,
+        sunset: null,
       };
     }
-
-    const res = await axios.get(
-      "https://api.openweathermap.org/data/2.5/weather",
-      {
-        params: {
-          q: `${OPENWEATHER_CITY},${OPENWEATHER_COUNTRY}`,
-          appid: OPENWEATHER_API_KEY,
-          units: "metric",
-        },
-      }
-    );
-
-    const main = res.data.main;
-    const weatherMain = res.data.weather?.[0]?.main || "Clear";
-
-    const status =
-      weatherMain === "Thunderstorm" || weatherMain === "Extreme"
-        ? "Unstable"
-        : "Stable";
-
-    return {
-      city: OPENWEATHER_CITY,
-      tempC: main.temp,
-      humidity: main.humidity,
-      status,
-      condition: weatherMain,
-    };
   }
 
   // --- Backend history ---
@@ -213,7 +341,8 @@ function App() {
     try {
       setLoading(true);
 
-      const [crypto, news, community, weather] = await Promise.all([
+      const [github, crypto, news, community, weather] = await Promise.all([
+        fetchGithub(),
         fetchCrypto(),
         fetchNews(),
         fetchCommunity(),
@@ -235,6 +364,7 @@ function App() {
 
       const snapshotObj = {
         timestamp: new Date().toISOString(),
+        github,
         crypto,
         news,
         community,
@@ -262,7 +392,6 @@ function App() {
     }
   }
 
-  // Load history when user logs in
   useEffect(() => {
     if (token) {
       loadHistory();
@@ -281,6 +410,7 @@ function App() {
       <div className="df-main">
         <Topbar
           token={token}
+          user={user}
           onLogin={loginWithGoogle}
           onLogout={logout}
           onRefresh={refreshSnapshot}
@@ -288,6 +418,7 @@ function App() {
         />
 
         <div className="df-content">
+          {/* OVERVIEW */}
           {activeSection === "overview" && (
             <>
               <section className="df-row df-row-top">
@@ -326,19 +457,52 @@ function App() {
                     value={
                       snapshot?.weather ? `${snapshot.weather.tempC}°C` : "--"
                     }
-                    hint={snapshot?.weather?.status || ""}
+                    hint={snapshot?.weather?.city || ""}
                   />
                 </div>
               </section>
 
               <section className="df-grid">
+                <Panel title="GitHub Trending">
+                  {snapshot ? (
+                    <div className="df-panel-body">
+                      <div className="df-metric-row">
+                        <span>Focus</span>
+                        <span className="mono">
+                          {snapshot.github.languageFocus}
+                        </span>
+                      </div>
+                      <div className="df-metric-row">
+                        <span>Repos (shown)</span>
+                        <span>{snapshot.github.topRepos.length}</span>
+                      </div>
+                      <ul className="df-list">
+                        {snapshot.github.topRepos.slice(0, 3).map((r) => (
+                          <li key={r.id}>
+                            <a href={r.url} target="_blank" rel="noreferrer">
+                              {r.name}
+                            </a>
+                            <span className="df-subtext">
+                              ⭐ {r.stars} · {r.language || "Unknown"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="df-empty">
+                      Click "Refresh Snapshot" to load GitHub data.
+                    </p>
+                  )}
+                </Panel>
+
                 <Panel title="Crypto Market">
                   {snapshot ? (
                     <div className="df-panel-body">
                       <div className="df-metric-row">
                         <span>BTC Price</span>
                         <span className="mono">
-                          {snapshot.crypto.btcPrice.toLocaleString()} USD
+                          {snapshot.crypto.btcPrice?.toLocaleString()} USD
                         </span>
                       </div>
                       <div className="df-metric-row">
@@ -425,16 +589,18 @@ function App() {
                   {snapshot ? (
                     <div className="df-panel-body">
                       <div className="df-metric-row">
-                        <span>City</span>
-                        <span>{snapshot.weather.city}</span>
+                        <span>Location</span>
+                        <span>
+                          {snapshot.weather.city}, {snapshot.weather.country}
+                        </span>
                       </div>
                       <div className="df-metric-row">
                         <span>Temperature</span>
                         <span>{snapshot.weather.tempC}°C</span>
                       </div>
                       <div className="df-metric-row">
-                        <span>Condition</span>
-                        <span>{snapshot.weather.condition}</span>
+                        <span>Feels Like</span>
+                        <span>{snapshot.weather.feelsLike}°C</span>
                       </div>
                       <div className="df-metric-row">
                         <span>Status</span>
@@ -457,17 +623,28 @@ function App() {
             </>
           )}
 
-          {activeSection === "history" && <HistoryPanel history={history} />}
-
-          {activeSection === "settings" && (
-            <section className="df-card df-panel">
-              <h2 className="df-panel-title">Settings</h2>
-              <p className="df-subtext">
-                You can extend this section with user preferences (tags, city,
-                theme) stored in MongoDB.
-              </p>
-            </section>
+          {/* DETAIL PAGES */}
+          {activeSection === "github" && (
+            <GithubPage snapshotGithub={snapshot?.github} />
           )}
+
+          {activeSection === "crypto" && (
+            <CryptoPage snapshotCrypto={snapshot?.crypto} />
+          )}
+
+          {activeSection === "news" && (
+            <NewsPage snapshotNews={snapshot?.news} />
+          )}
+
+          {activeSection === "community" && (
+            <CommunityPage snapshotCommunity={snapshot?.community} />
+          )}
+
+          {activeSection === "weather" && (
+            <WeatherPage snapshotWeather={snapshot?.weather} />
+          )}
+
+          {activeSection === "history" && <HistoryPanel history={history} />}
         </div>
       </div>
     </LayoutShell>
