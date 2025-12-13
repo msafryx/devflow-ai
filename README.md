@@ -35,6 +35,7 @@ The system follows **client–server architecture**, uses **OAuth 2.0 authentica
 ---
 
 ## 🏗 System Architecture (High-Level)
+```
 
 Frontend (React)
 ├── Aggregates Public APIs
@@ -49,7 +50,7 @@ Backend (Node.js + Express)
 ↓
 MongoDB (NoSQL)
 └── Snapshot Documents
-
+```
 
 ---
 
