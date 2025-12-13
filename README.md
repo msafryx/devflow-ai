@@ -95,6 +95,7 @@ MongoDB (NoSQL)
 ---
 
 ## 📂 Project Structure
+```
 
 devflow-ai/
 │
@@ -119,7 +120,7 @@ devflow-ai/
 │
 ├── README.md
 └── .env.example
-
+```
 
 ---
 
